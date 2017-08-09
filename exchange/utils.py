@@ -50,11 +50,12 @@ def insert_many(objects, using="default"):
         parameters.append(params)
 
     table = model._meta.db_table
-    column_names = ",".join(con.ops.quote_name(f.column) for f in fields)
-    placeholders = ",".join(("%s",) * len(fields))
-    con.cursor().executemany("insert into %s (%s) values (%s)"
-                             % (table, column_names, placeholders), parameters)
-    transaction.commit_unless_managed(using=using)
+    with transaction.atomic():
+        column_names = ",".join(con.ops.quote_name(f.column) for f in fields)
+        placeholders = ",".join(("%s",) * len(fields))
+        con.cursor().executemany("insert into %s (%s) values (%s)"
+                                 % (table, column_names, placeholders),
+                                 parameters)
 
 
 def update_many(objects, fields=[], using="default"):
