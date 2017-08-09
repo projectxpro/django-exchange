@@ -92,11 +92,11 @@ def update_many(objects, fields=[], using="default"):
     table = meta.db_table
     assignments = ",".join(("%s=%%s" % con.ops.quote_name(f.column))
                            for f in fields)
-    con.cursor().executemany("update %s set %s where %s=%%s"
-                             % (table, assignments,
-                                con.ops.quote_name(meta.pk.column)),
-                             parameters)
-    transaction.commit_unless_managed(using=using)
+    with transaction.atomic():
+        con.cursor().executemany("update %s set %s where %s=%%s"
+                                 % (table, assignments,
+                                    con.ops.quote_name(meta.pk.column)),
+                                 parameters)
 
 
 def memoize(ttl=None):
