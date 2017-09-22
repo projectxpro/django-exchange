@@ -1,5 +1,6 @@
 import logging
 from decimal import Decimal
+from django.conf import settings
 
 from exchange.models import Currency, ExchangeRate
 
@@ -13,6 +14,10 @@ class BaseAdapter(object):
     exchange rate models
 
     """
+
+    def __init__(self):
+        self.base_currency = getattr(settings, 'EXCHANGE_BASE_CURRENCY', 'EUR')
+
     def update(self):
         """Actual update process goes here using auxialary ``get_currencies``
         and ``get_exchangerates`` methods. This method creates or updates
@@ -31,16 +36,16 @@ class BaseAdapter(object):
                                                'id')
         existing = {(d['source__code'], d['target__code']): d['id']
                     for d in existing}
-        usd_exchange_rates = dict(self.get_exchangerates('USD'))
+        base_exchange_rates = dict(self.get_exchangerates(self.base_currency))
 
         updates = []
         inserts = []
         currencies = list(Currency.objects.all())
         for source in currencies:
             for target in currencies:
-                rate = self._get_rate_through_usd(source.code,
-                                                  target.code,
-                                                  usd_exchange_rates)
+                rate = self._get_rate_through_base(source.code,
+                                                   target.code,
+                                                   base_exchange_rates)
 
                 exchange_rate = ExchangeRate(source=source,
                                              target=target,
@@ -63,12 +68,12 @@ class BaseAdapter(object):
         insert_many(inserts)
         logger.info('saved rates to db')
 
-    def _get_rate_through_usd(self, source, target, usd_rates):
+    def _get_rate_through_base(self, source, target, base_rates):
         # from: https://openexchangerates.org/documentation#how-to-use
         # gbp_hkd = usd_hkd * (1 / usd_gbp)
-        usd_source = usd_rates[source]
-        usd_target = usd_rates[target]
-        rate = usd_target * (Decimal(1.0) / usd_source)
+        base_source = base_rates[source]
+        base_target = base_rates[target]
+        rate = base_target * (Decimal(1.0) / base_source)
         rate = rate.quantize(Decimal('0.123456'))  # round to 6 decimal places
         return rate
 
