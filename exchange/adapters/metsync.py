@@ -2,6 +2,7 @@ import urllib2
 import base64
 import os
 import json
+from decimal import Decimal
 from django.conf import settings
 from exchange.adapters import BaseAdapter
 
@@ -34,9 +35,9 @@ class MetsyncAdapter(BaseAdapter):
             result.append((k, k))
         return result
 
-    def get_exchangerates(self):
+    def get_exchangerates(self, base):
         data = self._request('Currencies/getCurrencyRates')
         result = []
         for k in data:
-            result.append((k, data[k]))
+            result.append((k, Decimal(str(data[k]))))
         return result

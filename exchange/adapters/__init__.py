@@ -31,6 +31,7 @@ class BaseAdapter(object):
             if created:
                 logger.info('currency: %s created', code)
 
+        ExchangeRate.objects.all().delete()
         existing = ExchangeRate.objects.values('source__code',
                                                'target__code',
                                                'id')
@@ -46,6 +47,8 @@ class BaseAdapter(object):
                 rate = self._get_rate_through_base(source.code,
                                                    target.code,
                                                    base_exchange_rates)
+                if not rate:
+                    continue
 
                 exchange_rate = ExchangeRate(source=source,
                                              target=target,
@@ -71,6 +74,8 @@ class BaseAdapter(object):
     def _get_rate_through_base(self, source, target, base_rates):
         # from: https://openexchangerates.org/documentation#how-to-use
         # gbp_hkd = usd_hkd * (1 / usd_gbp)
+        if not (source in base_rates and target in base_rates):
+            return False
         base_source = base_rates[source]
         base_target = base_rates[target]
         rate = base_target * (Decimal(1.0) / base_source)
