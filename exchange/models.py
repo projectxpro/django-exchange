@@ -7,6 +7,7 @@ class Currency(models.Model):
     """Model holds a currency information for a nationality"""
     code = models.CharField(max_length=3, unique=True)
     name = models.CharField(max_length=64)
+    order = models.SmallIntegerField(default=0, null=True, blank=True)
 
     class Meta:
         verbose_name_plural = 'currencies'
