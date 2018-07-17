@@ -8,9 +8,10 @@ class CurrencyAdmin(admin.ModelAdmin):
 
 class ExchangeRateAdmin(admin.ModelAdmin):
     search_fields = ('source__code', 'target__code')
-    list_display = ('source', 'target', 'rate')
+    list_display = ('source', 'target', 'rate', 'last_updated_at')
     list_select_related = ('source', 'target')
     raw_id_fields = ('source', 'target')
+    readonly_fields = ('last_updated_at', )
 
     class Meta:
         model = ExchangeRate
