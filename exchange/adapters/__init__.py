@@ -25,14 +25,12 @@ class BaseAdapter(object):
 
         """
         currencies = self.get_currencies()
-
         for code, name in currencies:
             _, created = Currency.objects.get_or_create(
                 code=code, defaults={'name': name})
             if created:
                 logger.info('currency: %s created', code)
 
-        ExchangeRate.objects.all().delete()
         existing = ExchangeRate.objects.values('source__code',
                                                'target__code',
                                                'id')
